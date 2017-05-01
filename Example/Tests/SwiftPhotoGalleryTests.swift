@@ -88,6 +88,12 @@ class SwiftPhotoGalleryTests: XCTestCase {
 
         expect(self.testHelper.didTellDelegateTapToClose).to(equal(true))
     }
+    
+    func testSwipeCallsDelegateMethod() {
+        testGallery.singleSwipeAction(recognizer: UISwipeGestureRecognizer())
+        
+        expect(self.testHelper.didTellDelegateSwipeToClose).to(equal(true))
+    }
 
     func testSetCurrentPage() {
 
@@ -150,6 +156,7 @@ class SwiftPhotoGalleryTestHelper: SwiftPhotoGalleryDelegate, SwiftPhotoGalleryD
     var timesAskedForNumberOfImagesInGallery:Int = 0
     var timesAskedForImageInGallery:[Int:Int] = [:]
     var didTellDelegateTapToClose:Bool = false
+    var didTellDelegateSwipeToClose:Bool = false
 
     @objc func numberOfImagesInGallery(gallery:SwiftPhotoGallery) -> Int {
         timesAskedForNumberOfImagesInGallery += 1
@@ -171,6 +178,10 @@ class SwiftPhotoGalleryTestHelper: SwiftPhotoGalleryDelegate, SwiftPhotoGalleryD
 
     @objc func galleryDidTapToClose(gallery:SwiftPhotoGallery) {
         didTellDelegateTapToClose = true
+    }
+    
+    @objc func galleryDidSwipeToClose(gallery:SwiftPhotoGallery) {
+        didTellDelegateSwipeToClose = true
     }
 }
 

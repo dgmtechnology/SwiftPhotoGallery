@@ -51,4 +51,8 @@ extension ViewController: SwiftPhotoGalleryDelegate {
     func galleryDidTapToClose(gallery: SwiftPhotoGallery) {
         dismiss(animated: true, completion: nil)
     }
+    
+    func galleryDidSwipeToClose(gallery: SwiftPhotoGallery) {
+        dismiss(animated: true, completion: nil)
+    }
 }

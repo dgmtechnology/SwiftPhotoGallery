@@ -16,6 +16,7 @@ import UIKit
 
 @objc public protocol SwiftPhotoGalleryDelegate {
     func galleryDidTapToClose(gallery:SwiftPhotoGallery)
+    func galleryDidSwipeToClose(gallery: SwiftPhotoGallery)
 }
 
 // MARK: ------ SwiftPhotoGallery ------
@@ -259,7 +260,7 @@ public class SwiftPhotoGallery: UIViewController {
                     self.view.alpha = 0
                     image.center = CGPoint(x: self.view.bounds.midX, y: swipeDistance)
                 }, completion: { (complete) in
-                    self.delegate?.galleryDidTapToClose(gallery: self)
+                    self.singleSwipeAction(recognizer: UISwipeGestureRecognizer())
                 })
             }
         }
@@ -269,7 +270,10 @@ public class SwiftPhotoGallery: UIViewController {
     public func singleTapAction(recognizer: UITapGestureRecognizer) {
         delegate?.galleryDidTapToClose(gallery: self)
     }
-
+    
+    public func singleSwipeAction(recognizer: UISwipeGestureRecognizer) {
+        delegate?.galleryDidSwipeToClose(gallery: self)
+    }
 
     // MARK: Private Methods
 
