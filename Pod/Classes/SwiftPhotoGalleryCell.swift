@@ -123,6 +123,10 @@ public class SwiftPhotoGalleryCell: UICollectionViewCell {
     }
     
     func configureForNewImage() {
+        // remove any subviews in case the cell has been reused
+        for subview in imageView.subviews {
+            subview.removeFromSuperview()
+        }
         imageView.image = image
         imageView.sizeToFit()
         imageView.alpha = 0.0
