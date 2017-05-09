@@ -29,6 +29,14 @@ import UIKit
     ///   - forIndex: index of the images to be displayed
     /// - Returns: Array of images to be displayed
     @objc optional func imagesInGallery(gallery: SwiftPhotoGallery, forIndex: Int) -> [UIImage]?
+    
+    
+    /// Optional delegate method to set an image to act as a cancel button. If this is not
+    /// implemented by the delegate, no cancel button will be overlaid. If an image is returned,
+    /// it will be used as a cancel button, overlaid in the top right hand corner
+    ///
+    /// - Returns: UIButton to be used as a cancel button
+    @objc optional func cancelButton() -> UIButton
 }
 
 @objc public protocol SwiftPhotoGalleryDelegate {
@@ -185,6 +193,7 @@ public class SwiftPhotoGallery: UIViewController {
         
         setupPageControl()
         setupGestureRecognizers()
+        setupCancelButton()
     }
     
     #if os(iOS)
@@ -357,6 +366,22 @@ public class SwiftPhotoGallery: UIViewController {
         return collectionView
     }
     
+    private func setupCancelButton() {
+        if let button = getCancelButton() {
+            view.addSubview(button)
+            button.translatesAutoresizingMaskIntoConstraints = false
+            if #available(iOS 9.0, *) {
+                let margin: CGFloat = 20.0
+                button.widthAnchor.constraint(equalToConstant: button.frame.size.width).isActive = true
+                button.heightAnchor.constraint(equalToConstant: button.frame.size.height).isActive = true
+                button.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -margin).isActive = true
+                button.topAnchor.constraint(equalTo: view.topAnchor, constant: margin).isActive = true
+            } else {
+                // Fallback on earlier versions
+            }
+        }
+    }
+    
     private func setupPageControl() {
         
         pageControl.translatesAutoresizingMaskIntoConstraints = false
@@ -400,7 +425,15 @@ public class SwiftPhotoGallery: UIViewController {
     }
     
     fileprivate func getImages(currentPage: Int) -> [UIImage] {
-        return (dataSource?.imagesInGallery!(gallery: self, forIndex: currentPage))!
+        if let images = dataSource?.imagesInGallery?(gallery: self, forIndex: currentPage) {
+            return images
+        } else {
+            return [UIImage]()
+        }
+    }
+    
+    fileprivate func getCancelButton() -> UIButton? {
+        return dataSource?.cancelButton?()
     }
     
 }
