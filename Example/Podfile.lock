@@ -1,9 +1,9 @@
 PODS:
-  - Nimble (5.0.0)
-  - SwiftPhotoGallery (2.0.6)
+  - Nimble (7.0.2)
+  - SwiftPhotoGallery (3.2.0)
 
 DEPENDENCIES:
-  - Nimble (~> 5.0.0)
+  - Nimble (~> 7.0.0)
   - SwiftPhotoGallery (from `../`)
 
 EXTERNAL SOURCES:
@@ -11,9 +11,9 @@ EXTERNAL SOURCES:
     :path: ../
 
 SPEC CHECKSUMS:
-  Nimble: 56fc9f5020effa2206de22c3dd910f4fb011b92f
-  SwiftPhotoGallery: 9a3bf416d5eaf93d42891fde543c81b4521876a2
+  Nimble: bfe1f814edabba69ff145cb1283e04ed636a67f2
+  SwiftPhotoGallery: de36fe6b3f505dc0e0771e8a2fc29de8d4d74354
 
-PODFILE CHECKSUM: 408c798ac124ce9c84b1f3bf218e6460cda0480a
+PODFILE CHECKSUM: 58ac06ff067d81114822295c83a24af8eb0ae788
 
-COCOAPODS: 1.1.0.rc.2
+COCOAPODS: 1.3.1

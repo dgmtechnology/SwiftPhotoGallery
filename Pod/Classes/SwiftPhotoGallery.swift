@@ -36,18 +36,23 @@ import UIKit
     /// it will be used as a cancel button, overlaid in the top right hand corner
     ///
     /// - Returns: UIButton to be used as a cancel button
-    @objc optional func cancelButton() -> UIButton
+    @objc optional func cancelButton() -> UIButton  //DGM
 }
 
 @objc public protocol SwiftPhotoGalleryDelegate {
     func galleryDidTapToClose(gallery:SwiftPhotoGallery)
-    func galleryDidSwipeToClose(gallery: SwiftPhotoGallery)
+    func galleryDidSwipeToClose(gallery: SwiftPhotoGallery) // DGM
 }
+
 
 // MARK: ------ SwiftPhotoGallery ------
 
 public class SwiftPhotoGallery: UIViewController {
-    
+
+    fileprivate var animateImageTransition = false
+    fileprivate var isViewFirstAppearing = true
+    fileprivate var deviceInRotation = false
+
     public weak var dataSource: SwiftPhotoGalleryDataSource?
     public weak var delegate: SwiftPhotoGalleryDelegate?
     
@@ -70,7 +75,6 @@ public class SwiftPhotoGallery: UIViewController {
         get {
             return pageControl.currentPageIndicatorTintColor!
         }
-        
         set(newCurrentPageIndicatorTintColor) {
             pageControl.currentPageIndicatorTintColor = newCurrentPageIndicatorTintColor
         }
@@ -80,7 +84,6 @@ public class SwiftPhotoGallery: UIViewController {
         get {
             return pageControl.pageIndicatorTintColor!
         }
-        
         set(newPageIndicatorTintColor) {
             pageControl.pageIndicatorTintColor = newPageIndicatorTintColor
         }
@@ -96,8 +99,13 @@ public class SwiftPhotoGallery: UIViewController {
             updatePageControl()
         }
         get {
-            pageBeforeRotation = Int(imageCollectionView.contentOffset.x / imageCollectionView.frame.size.width)
-            return Int(imageCollectionView.contentOffset.x / imageCollectionView.frame.size.width)
+            if isRevolvingCarouselEnabled {
+                pageBeforeRotation = Int(imageCollectionView.contentOffset.x / imageCollectionView.frame.size.width) - 1
+                return Int(imageCollectionView.contentOffset.x / imageCollectionView.frame.size.width) - 1
+            } else {
+                pageBeforeRotation = Int(imageCollectionView.contentOffset.x / imageCollectionView.frame.size.width)
+                return Int(imageCollectionView.contentOffset.x / imageCollectionView.frame.size.width)
+            }
         }
     }
     
@@ -116,7 +124,8 @@ public class SwiftPhotoGallery: UIViewController {
     #endif
     
     public var isSwipeToDismissEnabled: Bool = true
-    
+    public var isRevolvingCarouselEnabled: Bool = true
+
     private var pageBeforeRotation: Int = 0
     private var currentIndexPath: IndexPath = IndexPath(item: 0, section: 0)
     private var flowLayout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
@@ -162,8 +171,8 @@ public class SwiftPhotoGallery: UIViewController {
         
         if needsLayout {
             let desiredIndexPath = IndexPath(item: pageBeforeRotation, section: 0)
-            
-            if pageBeforeRotation > 0 {
+
+            if pageBeforeRotation >= 0 {
                 scrollToImage(withIndex: pageBeforeRotation, animated: false)
             }
             
@@ -189,13 +198,20 @@ public class SwiftPhotoGallery: UIViewController {
         view.backgroundColor = UIColor.black
         
         pageControl.currentPageIndicatorTintColor = UIColor.white
-        pageControl.pageIndicatorTintColor = UIColor(white: 0.75, alpha: 0.35) //Dim Grey
-        
+        pageControl.pageIndicatorTintColor = UIColor(white: 0.75, alpha: 0.35) //Dim Gray
+
+        isRevolvingCarouselEnabled = numberOfImages > 1
         setupPageControl()
         setupGestureRecognizers()
         setupCancelButton()
     }
-    
+
+    public override func viewDidAppear(_ animated: Bool) {
+        if currentPage < 0 {
+            currentPage = 0
+        }
+        isViewFirstAppearing = false
+    }
     #if os(iOS)
     public override var prefersStatusBarHidden: Bool {
         get {
@@ -208,6 +224,7 @@ public class SwiftPhotoGallery: UIViewController {
     // MARK: Rotation Handling
     public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
+        deviceInRotation = true
         needsLayout = true
     }
     
@@ -286,21 +303,27 @@ public class SwiftPhotoGallery: UIViewController {
             }
             
             if animateImageAway {
+                if self.modalPresentationStyle == .custom {
+                    self.delegate?.galleryDidTapToClose(gallery: self)
+                    return
+                }
+
                 UIView.animate(withDuration: 0.35, animations: {
                     self.view.alpha = 0
                     image.center = CGPoint(x: self.view.bounds.midX, y: swipeDistance)
                 }, completion: { (complete) in
-                    self.singleSwipeAction(recognizer: UISwipeGestureRecognizer())
+                    self.singleSwipeAction(recognizer: UISwipeGestureRecognizer()) // DGM
                 })
             }
+
         }
     }
     #endif
-    
-    public func singleTapAction(recognizer: UITapGestureRecognizer) {
+
+    @objc public func singleTapAction(recognizer: UITapGestureRecognizer) {
         delegate?.galleryDidTapToClose(gallery: self)
     }
-    
+
     public func singleSwipeAction(recognizer: UISwipeGestureRecognizer) {
         delegate?.galleryDidSwipeToClose(gallery: self)
     }
@@ -317,6 +340,8 @@ public class SwiftPhotoGallery: UIViewController {
         let collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: flowLayout)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.register(SwiftPhotoGalleryCell.self, forCellWithReuseIdentifier: "SwiftPhotoGalleryCell")
+        collectionView.register(SwiftPhotoGalleryCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionFooter, withReuseIdentifier: "SwiftPhotoGalleryCell")
+        collectionView.register(SwiftPhotoGalleryCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: "SwiftPhotoGalleryCell")
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.backgroundColor = UIColor.clear
@@ -365,7 +390,8 @@ public class SwiftPhotoGallery: UIViewController {
         
         return collectionView
     }
-    
+
+//DGM
     private func setupCancelButton() {
         if let button = getCancelButton() {
             view.addSubview(button)
@@ -381,7 +407,7 @@ public class SwiftPhotoGallery: UIViewController {
             }
         }
     }
-    
+//DGM
     private func setupPageControl() {
         
         pageControl.translatesAutoresizingMaskIntoConstraints = false
@@ -419,12 +445,14 @@ public class SwiftPhotoGallery: UIViewController {
     private func scrollToImage(withIndex: Int, animated: Bool = false) {
         imageCollectionView.scrollToItem(at: IndexPath(item: withIndex, section: 0), at: .centeredHorizontally, animated: animated)
     }
-    
+
+    //DGM
     fileprivate func getImage(currentPage: Int) -> UIImage? {
         return dataSource?.imageInGallery(gallery: self, forIndex: currentPage)
     }
     
     fileprivate func getImages(currentPage: Int) -> [UIImage] {
+        //DGM
         if let images = dataSource?.imagesInGallery?(gallery: self, forIndex: currentPage) {
             return images
         } else {
@@ -434,9 +462,11 @@ public class SwiftPhotoGallery: UIViewController {
     
     fileprivate func getCancelButton() -> UIButton? {
         return dataSource?.cancelButton?()
+        //DGM
     }
     
 }
+
 
 // MARK: UICollectionViewDataSource Methods
 extension SwiftPhotoGallery: UICollectionViewDataSource {
@@ -451,6 +481,7 @@ extension SwiftPhotoGallery: UICollectionViewDataSource {
     
     public func collectionView(_ imageCollectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = imageCollectionView.dequeueReusableCell(withReuseIdentifier: "SwiftPhotoGalleryCell", for: indexPath) as! SwiftPhotoGalleryCell
+        //DGM
         let image = getImage(currentPage: indexPath.row)
         if image != nil {
             cell.image = image
@@ -459,17 +490,50 @@ extension SwiftPhotoGallery: UICollectionViewDataSource {
         }
         return cell
     }
+
+    public func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        var cell = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionElementKindSectionFooter, withReuseIdentifier: "SwiftPhotoGalleryCell", for: indexPath) as! SwiftPhotoGalleryCell
+
+        switch kind {
+        case UICollectionElementKindSectionFooter:
+            cell.image = getImage(currentPage: 0)
+        case UICollectionElementKindSectionHeader:
+            cell = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionElementKindSectionHeader, withReuseIdentifier: "SwiftPhotoGalleryCell", for: indexPath) as! SwiftPhotoGalleryCell
+            if isViewFirstAppearing {
+                cell.image = getImage(currentPage: 0)
+            } else {
+                cell.image = getImage(currentPage: numberOfImages - 1)
+            }
+        default:
+            assertionFailure("Unexpected element kind")
+        }
+
+        return cell
+    }
+
+    @objc public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForFooterInSection section: Int) -> CGSize {
+        guard isRevolvingCarouselEnabled else { return CGSize.zero }
+        return CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+    }
+
+    @objc public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+        guard isRevolvingCarouselEnabled else { return CGSize.zero }
+        return CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+    }
 }
+
 
 // MARK: UICollectionViewDelegate Methods
 extension SwiftPhotoGallery: UICollectionViewDelegate {
     
     public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        animateImageTransition = true
         self.pageControl.alpha = 1.0
     }
     
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        
+        animateImageTransition = false
+
         // If the scroll animation ended, update the page control to reflect the current page we are on
         updatePageControl()
         
@@ -480,14 +544,33 @@ extension SwiftPhotoGallery: UICollectionViewDelegate {
     
     public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         if let cell = cell as? SwiftPhotoGalleryCell {
+            //DGM
             if cell.images != nil && (cell.images?.count)! > 0 {
                 cell.configureForNewImages()
             } else {
-                cell.configureForNewImage()
+                cell.configureForNewImage(animated: animateImageTransition)
             }
         }
     }
+
+    public func collectionView(_ collectionView: UICollectionView, willDisplaySupplementaryView view: UICollectionReusableView, forElementKind elementKind: String, at indexPath: IndexPath) {
+        if let cell = view as? SwiftPhotoGalleryCell {
+            collectionView.layoutIfNeeded()
+            cell.configureForNewImage(animated: animateImageTransition)
+        }
+    }
+
+    public func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        if !collectionView.visibleSupplementaryViews(ofKind: UICollectionElementKindSectionFooter).isEmpty && !deviceInRotation || (currentPage == numberOfImages && !deviceInRotation) {
+            currentPage = 0
+        }
+        if !collectionView.visibleSupplementaryViews(ofKind: UICollectionElementKindSectionHeader).isEmpty && !deviceInRotation || (currentPage == -1 && !deviceInRotation) {
+            currentPage = numberOfImages - 1
+        }
+        deviceInRotation = false
+    }
 }
+
 
 // MARK: UIGestureRecognizerDelegate Methods
 extension SwiftPhotoGallery: UIGestureRecognizerDelegate {
@@ -500,4 +583,3 @@ extension SwiftPhotoGallery: UIGestureRecognizerDelegate {
             gestureRecognizer.view == imageCollectionView
     }
 }
-

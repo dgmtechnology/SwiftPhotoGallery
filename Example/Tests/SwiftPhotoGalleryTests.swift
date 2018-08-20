@@ -25,7 +25,8 @@ class SwiftPhotoGalleryTests: XCTestCase {
     
     func testProgramaticInitialization() {
         testGallery.viewDidLoad()
-
+        testGallery.isRevolvingCarouselEnabled = false
+        
         expect(self.testGallery.delegate).toNot(beNil())
         expect(self.testGallery.delegate) === testHelper
 
@@ -44,6 +45,7 @@ class SwiftPhotoGalleryTests: XCTestCase {
 
     func testFirstImagesLoadedAfterInitialization() {
         testGallery.viewDidLoad()
+        testGallery.isRevolvingCarouselEnabled = false
 
         let indexPath = IndexPath(item: 0, section: 0)
         testGallery.imageCollectionView.reloadItems(at: [indexPath])
@@ -72,7 +74,7 @@ class SwiftPhotoGalleryTests: XCTestCase {
 
         let timesAskedForNumberOfImagesInGallery = testHelper.timesAskedForNumberOfImagesInGallery
 
-        expect(self.testHelper.timesAskedForNumberOfImagesInGallery).to(equal(2))
+        expect(self.testHelper.timesAskedForNumberOfImagesInGallery).to(equal(4))
 
         testGallery.dataSource = testHelper
 

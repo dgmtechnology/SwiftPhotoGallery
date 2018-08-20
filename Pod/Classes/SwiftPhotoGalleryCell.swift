@@ -6,11 +6,11 @@
 //
 //
 
-public class SwiftPhotoGalleryCell: UICollectionViewCell {
-    
+open class SwiftPhotoGalleryCell: UICollectionViewCell {
+
     var image:UIImage? {
         didSet {
-            configureForNewImage()
+            configureForNewImage(animated: false)
         }
     }
     
@@ -112,30 +112,31 @@ public class SwiftPhotoGalleryCell: UICollectionViewCell {
     required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    public func doubleTapAction(recognizer: UITapGestureRecognizer) {
-        
+
+    @objc public func doubleTapAction(recognizer: UITapGestureRecognizer) {
+
         if (scrollView.zoomScale > scrollView.minimumZoomScale) {
             scrollView.setZoomScale(scrollView.minimumZoomScale, animated: true)
         } else {
             scrollView.setZoomScale(scrollView.maximumZoomScale, animated: true)
         }
     }
-    
-    func configureForNewImage() {
-        // remove any subviews in case the cell has been reused
-        for subview in imageView.subviews {
-            subview.removeFromSuperview()
-        }
+
+    func configureForNewImage(animated: Bool = true) {
+    // remove any subviews in case the cell has been reused
+    for subview in imageView.subviews {
+        subview.removeFromSuperview()
+    }
         imageView.image = image
         imageView.sizeToFit()
-        imageView.alpha = 0.0
-        
         setZoomScale()
         scrollViewDidZoom(scrollView)
-        
-        UIView.animate(withDuration: 0.5) {
-            self.imageView.alpha = 1.0
+
+        if animated {
+            imageView.alpha = 0.0
+            UIView.animate(withDuration: 0.5) {
+                self.imageView.alpha = 1.0
+            }
         }
     }
     
@@ -159,6 +160,7 @@ public class SwiftPhotoGalleryCell: UICollectionViewCell {
             self.imageView.alpha = 1.0
         }
     }
+
     
     // MARK: Private Methods
     
@@ -180,6 +182,7 @@ public class SwiftPhotoGalleryCell: UICollectionViewCell {
     }
     
 }
+
 // MARK: UIScrollViewDelegate Methods
 extension SwiftPhotoGalleryCell: UIScrollViewDelegate {
     

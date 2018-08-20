@@ -5,12 +5,16 @@
 [![License](https://img.shields.io/cocoapods/l/SwiftPhotoGallery.svg?style=flat)](http://cocoapods.org/pods/SwiftPhotoGallery)
 [![CocoaPods](https://img.shields.io/cocoapods/dt/SwiftPhotoGallery.svg?style=flat)](https://cocoapods.org/pods/SwiftPhotoGallery)
 ![tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
-![Swift](https://img.shields.io/badge/Swift-3.0-orange.svg)
+![Swift](https://img.shields.io/badge/Swift-4.0-orange.svg)
 ![Dependencies](https://img.shields.io/badge/dependencies-none-lightgrey.svg?style=flat)
 
 ## Overview
 
-A full screen photo gallery for iOS and tvOS written in Swift. 
+A full screen photo gallery for iOS and tvOS written in Swift.
+
+<p align="center">
+    <img src="https://s3.amazonaws.com/inspirato-ios/SwiftPhotoGallery_animation.gif">
+</p>
 
 - Photos can be panned and zoomed (iOS only)
 - Pinch to zoom (iOS only)
@@ -29,18 +33,26 @@ A full screen photo gallery for iOS and tvOS written in Swift.
 To run the example project, clone the repo, and run `pod install` from the Example directory.
 
 ## Requirements
-- iOS 8.3+
+- iOS 9.0+
 - tvOS 10.0+
-- Xcode 8.0+
-- Swift 3.0+
+- Xcode 9.0+
+- Swift 4.0+
+
+## Communication
+
+- If you **need help**, use [Stack Overflow](https://stackoverflow.com/questions/tagged/swiftphotogallery). (Tag 'swiftphotogallery')
+- If you'd like to **ask a general question**, use [Stack Overflow](https://stackoverflow.com/questions/tagged/swiftphotogallery).
+- If you **found a bug**, open an issue.
+- If you **have a feature request**, open an issue.
+- If you **want to contribute**, submit a pull request.
 
 ## Installation
 
 SwiftPhotoGallery is available through [CocoaPods](http://cocoapods.org). To install
 it, simply add the following line to your Podfile:
 
-```ruby
-pod "SwiftPhotoGallery"
+```swift
+pod 'SwiftPhotoGallery'
 ```
 
 ## Implementation
@@ -60,6 +72,7 @@ let gallery = SwiftPhotoGallery(delegate: self, dataSource: self)
 gallery.backgroundColor = UIColor.blackColor()
 gallery.pageIndicatorTintColor = UIColor.grayColor().colorWithAlphaComponent(0.5)
 gallery.currentPageIndicatorTintColor = UIColor.whiteColor()
+gallery.hidePageControl = false
 ```
 
 * **Implement the datasource**
@@ -67,28 +80,36 @@ gallery.currentPageIndicatorTintColor = UIColor.whiteColor()
 let imageNames = ["image1.jpeg", "image2.jpeg", "image3.jpeg"]
 
 func numberOfImagesInGallery(gallery: SwiftPhotoGallery) -> Int {
-  return imageNames.count
+    return imageNames.count
 }
 
 func imageInGallery(gallery: SwiftPhotoGallery, forIndex: Int) -> UIImage? {
-  return UIImage(named: imageNames[forIndex])
+    return UIImage(named: imageNames[forIndex])
 }
 ```
 
 * **Implement the delegate**
 ```swift
 func galleryDidTapToClose(gallery: SwiftPhotoGallery) {
-  // do something cool like:
-  dismissViewControllerAnimated(true, completion: nil)
+    // do something cool like:
+    dismiss(animated: true, completion: nil)
 }
 ```
 
+* **Present the gallery**
+```swift
+present(gallery, animated: true, completion: nil)
+```
 
-* **Full example:**
+
+
+
+## Full Example
 ```swift
 class ViewController: UIViewController, SwiftPhotoGalleryDataSource, SwiftPhotoGalleryDelegate {
 
     let imageNames = ["image1.jpeg", "image2.jpeg", "image3.jpeg"]
+    var index: Int = 2
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -100,8 +121,18 @@ class ViewController: UIViewController, SwiftPhotoGalleryDataSource, SwiftPhotoG
         gallery.backgroundColor = UIColor.blackColor()
         gallery.pageIndicatorTintColor = UIColor.grayColor().colorWithAlphaComponent(0.5)
         gallery.currentPageIndicatorTintColor = UIColor.whiteColor()
+        gallery.hidePageControl = false
 
-        presentViewController(gallery, animated: true, completion: nil)
+        present(gallery, animated: true, completion: nil)
+
+        /*
+        /// Or load on a specific page like this:
+
+        present(gallery, animated: true, completion: { () -> Void in
+            gallery.currentPage = self.index
+        })
+        */
+
     }
 
     // MARK: SwiftPhotoGalleryDataSource Methods
@@ -111,14 +142,13 @@ class ViewController: UIViewController, SwiftPhotoGalleryDataSource, SwiftPhotoG
     }
 
     func imageInGallery(gallery: SwiftPhotoGallery, forIndex: Int) -> UIImage? {
-
         return UIImage(named: imageNames[forIndex])
     }
 
     // MARK: SwiftPhotoGalleryDelegate Methods
 
     func galleryDidTapToClose(gallery: SwiftPhotoGallery) {
-        dismissViewControllerAnimated(true, completion: nil)
+        dismiss(animated: true, completion: nil)
     }
     
 }
@@ -131,4 +161,4 @@ Justin Vallely, jvallely@inspirato.com
 
 ## License
 
-SwiftPhotoGallery is available under the GNU General Public License. See the LICENSE file for more info.
+SwiftPhotoGallery is available under the Apache License 2.0. See the LICENSE file for more info.
